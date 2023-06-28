@@ -1,0 +1,28 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2023-06-28T18:03:19Z",
+  "id": "linedc-mini-app-handson",
+  "duration": 0,
+  "title": "DX実践！LINEミニアプリ×Datadogで課題総解決アプリを作ろう！【ミニアプリのデプロイ編】",
+  "authors": "Koki Miura",
+  "summary": "会員証のLINEミニアプリをデプロイするハンズオンです",
+  "source": "1qhZTcbVN2xvZ4TocG34f-J5VvX_XJ6V2lX5--bjgXfo",
+  "theme": "web",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "web"
+  ],
+  "tags": [
+    "aws",
+    "cdk",
+    "jawsug",
+    "web"
+  ],
+  "feedback": "https://twitter.com/k_miura_io",
+  "url": "linedc-mini-app-handson"
+}

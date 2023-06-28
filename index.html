@@ -1,0 +1,418 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>DX実践！LINEミニアプリ×Datadogで課題総解決アプリを作ろう！【ミニアプリのデプロイ編】</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="linedc-mini-app-handson"
+                  title="DX実践！LINEミニアプリ×Datadogで課題総解決アプリを作ろう！【ミニアプリのデプロイ編】"
+                  environment="web"
+                  feedback-link="https://twitter.com/k_miura_io">
+    
+      <google-codelab-step label="はじめに" duration="0">
+        <p>本資料は<a href="https://linedevelopercommunity.connpass.com/event/284062/" target="_blank">DX実践！LINEミニアプリ×Datadogで課題総解決アプリを作ろう！</a> の題材となるミニアプリのデプロイ手順を解説します。</p>
+<p>今回は以下のハンズオン資料で紹介されているアプリケーションをデプロイします。</p>
+<p><a href="https://zenn.dev/arahabica/books/24f222a17d2a67" target="_blank">AWSで会員証LINEミニアプリを作ろう！</a></p>
+<h2 is-upgraded>システム構成</h2>
+<p>今回構築するミニアプリのシステム構成は以下のリンクで解説されている通り、AWSのマイクロサービスを使用したサーバレス構成になっています。</p>
+<p><a href="https://zenn.dev/arahabica/books/24f222a17d2a67/viewer/system#3.1-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E6%A7%8B%E6%88%90%E5%9B%B3" target="_blank">https://zenn.dev/arahabica/books/24f222a17d2a67/viewer/system#3.1-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E6%A7%8B%E6%88%90%E5%9B%B3</a></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="環境構築" duration="0">
+        <p>今回のハンズオンの環境構築をやっていきます。</p>
+<p>なお、リージョン違いでのトラブルを防ぐためAWSの作業はすべて<strong>ap-northeast-1(東京リージョン)</strong>で行います</p>
+<h2 is-upgraded>事前準備</h2>
+<ul>
+<li>AWSアカウント(IAMユーザーでログインしている場合は、AdministratorAccessポリシーが必要です。まだ作成されてない方は<a href="https://aws.amazon.com/jp/register-flow/" target="_blank">https://aws.amazon.com/jp/register-flow/</a> を参考に登録してください)</li>
+<li>Gitpodのアカウント(<a href="https://www.gitpod.io" target="_blank">https://www.gitpod.io</a> から登録してください。Github、Gitlab、BItbucketのアカウントが必要です)</li>
+</ul>
+<h2 is-upgraded>Gitpodを起動</h2>
+<p>まずは開発環境を用意します。通常、AWSのハンズオンであればCloud9を使うことが多いですが、今回はアプリケーションでVPCを使用するため、開発環境にGitpodというサービスを使用します。</p>
+<p>以下のレポジトリにアクセスします。</p>
+<p><a href="https://github.com/Miura55/line-mini-app-hands-on" target="_blank">https://github.com/Miura55/line-mini-app-hands-on</a></p>
+<p>レポジトリを開いたら画面下部のREADMEにある「Open in Gitpod」をクリックすることでハンズオンの開発環境を構築することができます。</p>
+<p>初回の起動時にはDockerイメージのビルドが行われるので時間がかかります。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/92348e4addaf0ead.png"></p>
+<p>以下のようにVSCodeが起動できたら実行環境の用意は完了です。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/c0cbeb33d0eaef9d.png"></p>
+<h2 is-upgraded>アクセスキーを入手</h2>
+<p>GitpodからAWSへの接続に必要なアクセスキーを入手するためにIAMユーザーを作成します（AdministratorAccessポリシーのIAMユーザーでログインしている場合はそのユーザーでアクセスキーを作成しても構いません）</p>
+<p class="image-container"><img style="width: 601.70px" src="img/a6a613c6ad4426a3.png"></p>
+<p>ポリシーは<strong>AdministratorAccess</strong>を選択します</p>
+<p class="image-container"><img style="width: 601.70px" src="img/6e8299c970d28b35.png"></p>
+<p>作成したIAMユーザーをクリックして「セキュリティ認証情報」タブをクリックしてアクセスキーを作成します</p>
+<p class="image-container"><img style="width: 601.70px" src="img/c4c53e12ebf0cc08.png"></p>
+<p class="image-container"><img style="width: 601.70px" src="img/85b170e1af3a9fb4.png"></p>
+<p>使用目的はCLIを選択して、その後下に表示されるチェックボックスにチェックをいれて次へ進みます。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/8bd2081aa79671cf.png"></p>
+<p class="image-container"><img style="width: 601.70px" src="img/6358eb6f48c75fdb.png"></p>
+<p>あとはデフォルトのままアクセスキーが取得できる画面まで進みます。アクセスキーの画面を閉じるとシークレットアクセスキーは2度と確認することができないので、忘れずにメモしておきます。<img style="width: 601.70px" src="img/f09c5c517a0d1801.png"></p>
+<h2 is-upgraded>AWS CLIの設定をする</h2>
+<p>Gitpodに戻りターミナルで <code>aws configure</code> を実行し、AWSの認証情報を登録します。</p>
+<p>AWS Access Key IDには先程取得したアクセスキーを入力します。</p>
+<pre><code>AWS Access Key ID [None]:【アクセスキー】
+AWS Secret Access Key [None]:【シークレットアクセスキー】
+Default region name [None]: ap-northeast-1
+Default output format [None]: json</code></pre>
+<p>設定ができたら <code>aws iam list-users</code>でAWSのルートアカウント上にあるIAMユーザーの情報が一覧で表示されたらCLIの設定は正常に完了しています。もし、エラーが出る場合は認証情報に誤りが無いか確認してください。</p>
+<pre><code>{
+    &#34;Users&#34;: [
+        {
+            &#34;Path&#34;: &#34;/&#34;,
+            &#34;UserName&#34;: &#34;develop&#34;,
+            &#34;UserId&#34;: &#34;AIDA4IPKU4JDEXAMPLEID&#34;,
+            &#34;Arn&#34;: &#34;arn:aws:iam::123456789000:user/develop&#34;,
+            &#34;CreateDate&#34;: &#34;2022-12-29T06:54:08+00:00&#34;,
+            &#34;PasswordLastUsed&#34;: &#34;2023-02-13T11:40:14+00:00&#34;
+        },
+        {
+            &#34;Path&#34;: &#34;/&#34;,
+            &#34;UserName&#34;: &#34;Gitpod&#34;,
+            &#34;UserId&#34;: &#34;AIDA4IPKU4JEXAMPLEID&#34;,
+            &#34;Arn&#34;: &#34;arn:aws:iam::123456789000:user/Gitpod&#34;,
+            &#34;CreateDate&#34;: &#34;2023-02-13T12:53:01+00:00&#34;
+        }
+    ]
+}
+</code></pre>
+<p>ターミナルに貼り付けるときに以下のダイアログが表示されたらコピペを許可してもらっていいです。</p>
+<p class="image-container"><img style="width: 324.00px" src="img/e7b575ff2486538e.png"></p>
+<p>ここまでで開発環境の構築は完了です。次のステップでミニアプリをデプロイしていきます。</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="最初のデプロイ" duration="0">
+        <h2 is-upgraded>serverless.ymlを修正</h2>
+<p>まずはserverless.ymlを修正します。このファイルはミニアプリに必要なAWSのサービスを定義しています。</p>
+<p>serverless.ymlの1行目の <code>your-name</code> を他の人とバッティングしないサービス名に変更します。TwiterやGithubなどのソーシャルのアカウントIDを設定するといいです。</p>
+<pre><code>service: &#123;&#123;YOUR NAME}}-line-member-card</code></pre>
+<h2 is-upgraded>デプロイを実行</h2>
+<p>serverless.ymlを修正したところで問題なくデプロイできることを確認するために早速デプロイをしていきます。</p>
+<p>以下のコマンドを実行するとデプロイが行われます。</p>
+<pre><code>yarn deploy</code></pre>
+<p>このデプロイでは初回のデプロイで新規にAWSのサービスを構築するために時間がかかります。</p>
+<p>デプロイ後、以下のようにStack Outputsが表示されたらデプロイは成功です。</p>
+<pre><code>Stack Outputs:
+  YourNameDashlineDashmemberDashcardDashdevDashnodejsDashdefaultLambdaLayerQualifiedArn: arn:aws:lambda:ap-northeast-1:123456789012:layer:your-name-line-member-card-dev-nodejs-default:13
+  StaticContentsCloudFrontUrl: https://hogehuga.cloudfront.net
+  BackendLambdaFunctionQualifiedArn: arn:aws:lambda:ap-northeast-1:123456789012:function:your-name-line-member-card-dev-backend:5
+  ServiceEndpoint: https://hogehuga.execute-api.ap-northeast-1.amazonaws.com/dev
+  ServerlessDeploymentBucketName: kmiura-line-member-card-dev-deployment</code></pre>
+<h2 is-upgraded>デプロイされたページを確認</h2>
+<p>出力されたStack Outputのうち、 <code>StaticContentsCloudFrontUrl</code> の項目にあるCloudfrontのURLをブラウザで開きます。</p>
+<p>以下の画面が表示されたらデプロイは成功です。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/22e5bd47131eb09c.png"></p>
+<p>ここまでできたら、最初のデプロイは完了です。次のページからは実際にミニアプリを作成していきます。</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ミニアプリを作成する" duration="0">
+        <h2 is-upgraded>ミニアプリのチャネル作成</h2>
+<p>以下のドキュメントを参考にミニアプリのチャネルを作成します。</p>
+<p><a href="https://developers.line.biz/ja/docs/line-mini-app/develop/develop-overview/#create-line-mini-app-channel" target="_blank">https://developers.line.biz/ja/docs/line-mini-app/develop/develop-overview/#create-line-mini-app-channel</a></p>
+<p>作成したら「チャネル基本設定」タブのチャネルIDのうち、開発用のチャネルIDをコピーしてどこかにメモしておきます。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/392cc2b006879d55.png"></p>
+<p>次に「LIFF」タブをクリックして「LIFF URL」の項目にある開発用のURLをコピーして、どこかにメモしておきます。このURLがミニアプリのURLになります。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/19c9dec16edda49c.png"></p>
+<p>同じく「LIFF」タブの画面をスクロールするとあらわれる「エンドポイントURL」に先程デプロイしたときに確認したCloudfrontのURLを設定します。URLは「編集」ボタンをクリックすることで変更できるのでデフォルトのURLからCloudfrontのURLに書き換えます。</p>
+<p>LIFF URLにアクセスするとこのエンドポイントURLに接続されます。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/b935cbdd7748f24f.png"></p>
+<h2 is-upgraded>ミニアプリが開くか確認する</h2>
+<p>これでミニアプリの設定はひとまず完了です。先程コピーしたLIFF URLをパソコンのブラウザで開きます。</p>
+<p>すると以下の画面が表示されるのでスマホのLINEアプリのQRコードリーダーで画面のQRコードをスキャンします。<img style="width: 537.00px" src="img/7aef0288424b9c02.png"></p>
+<p>スキャンをしてスマホ上で先程パソコンのブラウザで開いたページを開くことができればミニアプリの設定は問題なくできています。</p>
+<p class="image-container"><img style="width: 300.26px" src="img/956298c4c2136ee.png"></p>
+<p>以上でミニアプリは作成できました。</p>
+<p>ただ、今はNext.jsのテンプレートページを表示しているだけなので次のページで会員証を作成していきます。</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="会員証を作成する" duration="0">
+        <h2 is-upgraded>パラメータストアにミニアプリの設定情報を登録する</h2>
+<p>AWSにはSystems ManagerというAWS上で設定値を管理するサービスです。このサービスを使用することでAWS上で動作しているアプリケーションで必要な設定値を参照できるようになるのでソースコード内に設定値をハードコーディングせずにすみます。</p>
+<p>AWSのコンソール画面でAWS Systems Managerを開き、パラメータストアをクリックします。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/4c853be51741ac9d.png"></p>
+<p>パラメータストアの画面を開いたら「パラメータの作成」をクリックします。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/2c9b4b32d51a8322.png"></p>
+<p>ここではミニアプリに必要なパラメータとして、チャネルIDとLIFF IDを設定します。</p>
+<p>チャネルIDは以下の設定を行い、画面下の「パラメータを作成」をクリックします。</p>
+<ul>
+<li>名前：<code>/dev/&#123;&#123;YOUR_SERVICE_NAME}}/LINE_CHANNEL_ID</code> (<code>&#123;&#123;YOUR_SERVICE_NAME}}</code> の箇所はserverless.ymlの1行目に設定しているサービス名を設定します)</li>
+<li>データ型：text</li>
+<li>値：ミニアプリのチャネル作成時にメモしたチャネルID</li>
+</ul>
+<p class="image-container"><img style="width: 601.70px" src="img/7634451e34d6cab.png"></p>
+<p>同様にLIFF IDは以下の設定を行います。</p>
+<ul>
+<li>名前：<code>/dev/&#123;&#123;YOUR_SERVICE_NAME}}/LIFF_ID</code>  (<code>&#123;&#123;YOUR_SERVICE_NAME}}</code> の箇所はserverless.ymlの1行目に設定しているサービス名を設定します)</li>
+<li>データ型：text</li>
+<li>値：ミニアプリのチャネル作成時にメモしたLIFF URLのうち、 <a href="https://liff.line.me/" target="_blank"><code>https://liff.line.me/</code></a> 以降の文字列 (例えば<a href="https://liff.line.me/1657239651-4MOr6aYa" target="_blank"><code>https://liff.line.me/1657239651-4MOr6aYa</code></a> の場合は <a href="https://liff.line.me/1657239651-4MOr6aYa" target="_blank"><code>1657239651-4MOr6aYa</code></a> がLIFF IDです)</li>
+</ul>
+<h2 is-upgraded>コードを修正</h2>
+<p>続いてアプリのコードを修正します。</p>
+<p><code>frontend/pages/index.vue</code> を以下のコードに書き換えます。書き換えるとコードは自動で保存されます。</p>
+<pre><code>&lt;template&gt;
+  &lt;section class=&#34;app-wrapper&#34;&gt;
+    &lt;v-progress-circular
+      v-if=&#34;!isLoggedIn&#34;
+      indeterminate
+      color=&#34;primary&#34;
+      :size=&#34;120&#34;
+    &gt;&lt;/v-progress-circular&gt;
+    &lt;div v-if=&#34;isLoggedIn&#34; class=&#34;member-card-app&#34;&gt;
+      &lt;div class=&#34;header&#34;&gt;
+        &lt;v-icon color=&#34;#ffffff&#34; large&gt;&#123;&#123;mdiFruitPineapple}}&lt;/v-icon&gt;
+        &lt;h2&gt;ALOHA MEMBERS CARD&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;v-card class=&#34;member-card&#34;&gt;
+        &lt;h4 v-if=&#34;profile&#34; class=&#34;mt-3&#34; &gt;&#123;&#123;profile.displayName}}様&lt;/h4&gt;
+        &lt;div class=&#34;qr-code-app&#34;&gt;
+          &lt;div class=&#34;qr-code-wrapper&#34;&gt;
+            &lt;vue-qrcode :value=&#34;userId&#34; :options=&#34;qrOption&#34; tag=&#34;img&#34; class=&#34;qr-code&#34;/&gt;
+            &lt;div v-if=&#34;profile&#34; class=&#34;app-icon-wrapper&#34;&gt;
+              &lt;div class=&#34;white-circle&#34; &gt;
+                &lt;v-avatar v-if=&#34;profile.pictureUrl&#34; :size=&#34;54&#34; class=&#34;avatar&#34;&gt;
+                  &lt;v-img :src=&#34;profile.pictureUrl&#34; :alt=&#34;profile.displayName&#34;/&gt;
+                &lt;/v-avatar&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/v-card&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+&lt;script&gt;
+import liff from &#34;@line/liff&#34;
+import axiosBase from &#34;axios&#34;
+import VueQrcode from &#39;@chenfengyuan/vue-qrcode&#39;
+import { mdiFruitPineapple } from &#39;@mdi/js&#39;
+
+const LIFF_ID = process.env.LIFF_ID
+
+const axios = axiosBase.create({
+  baseURL: &#39;/api&#39;,
+  headers: {
+    &#39;Content-Type&#39;: &#39;application/json&#39;,
+    &#39;X-Requested-With&#39;: &#39;XMLHttpRequest&#39;
+  },
+  responseType: &#39;json&#39;
+})
+const qrOption = {
+  errorCorrectionLevel: &#34;H&#34;,
+  maskPattern: 0,
+  margin: 2,
+  scale: 2,
+  width: 240,
+  color: {
+    dark: &#39;#222222&#39;,
+    light: &#34;#ffffff&#34;
+  }
+}
+export default {
+  components: {VueQrcode},
+  data() {
+    return {
+      isLoggedIn: false,
+      userId: null,
+      profile: null,
+      qrOption,
+      mdiFruitPineapple
+    }
+  },
+  async mounted() {
+    // 1. LIFFの初期化
+    await liff.init({liffId: LIFF_ID})
+      .catch((err) =&gt; {
+        console.error(err)
+        window.alert(&#39;LIFFの初期化失敗。\n&#39; + err)
+      })
+    // 2. LINEに未認証の場合、ログイン画面にリダイレクト
+    if (!liff.isLoggedIn()) {
+      await liff.login()
+      return
+    }
+    const { userId } = liff.getContext()
+    this.userId = userId
+    this.isLoggedIn = true
+    let hasProfilePermission = await this.verifyProfilePermission()
+    if (!hasProfilePermission) {
+      await this.requestAllPermission()
+      hasProfilePermission = await this.verifyProfilePermission()
+    }
+    if (hasProfilePermission) {
+      this.profile = await liff.getProfile()
+    }
+    const idToken = liff.getIDToken()
+    await axios.put(&#39;/user&#39;, { userId, idToken })
+    this.isLoggedIn = true
+  },
+  methods: {
+    async verifyProfilePermission() {
+      const permissionStatus = await liff.permission.query(&#34;profile&#34;)
+      return permissionStatus.state === &#34;granted&#34;
+    },
+    async requestAllPermission() {
+      try {
+        await liff.permission.requestAll()
+      } catch(e) {
+        console.error(e)
+      }
+    }
+  }
+}
+&lt;/script&gt;
+&lt;style scoped lang=&#34;scss&#34;&gt;
+.app-wrapper {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: #3ee577;
+}
+.header {
+  margin: 8px 0 0 0;
+  h2 {
+    margin: 8px 0 0 0;
+    font-size: 18px;
+    color: #ffffff;
+  }
+}
+.member-card-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+  .member-card {
+    margin: 12px 20px 0 12px;
+    padding: 12px 0 24px;
+  }
+}
+.qr-code-app {
+  display: flex;
+  justify-content: center;
+  .qr-code-wrapper {
+    position: relative;
+    .qr-code {
+      max-width: 240px;
+      width: 100%;
+    }
+    .app-icon-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .white-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        background-color: #ffffff;
+        .avatar {
+          margin: 3px;
+        }
+      }
+      .app-icon {
+        max-width: 54px
+      }
+    }
+  }
+}
+&lt;/style&gt;
+</code></pre>
+<h2 is-upgraded>デプロイ</h2>
+<p>コードを修正したらデプロイを行いますが、その前にデプロイの定義をしている <code>serverless.yml</code> の75行目のコメントアウトを解除します。この設定を追加することで次の手順で必要になるS3のアクセス権限を追加できます。</p>
+<pre><code>resources:
+  Resources:
+    S3Storage:
+      Type: &#39;AWS::S3::Bucket&#39;
+      Properties:
+        BucketName: &#39;${self:custom.app.PUBLIC_BUCKET}&#39;
+        WebsiteConfiguration:
+          IndexDocument: index.html
+        AccessControl: PublicRead # ←この行にある#を外す
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: ObjectWriter
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false</code></pre>
+<p>その後以下のコマンドでデプロイを実行します。ビルドも実行されるためデプロイには時間がかかります。</p>
+<pre><code>yarn deploy</code></pre>
+<p>デプロイ実行後、以下の画面が表示されたら会員証のデプロイは成功です。</p>
+<p class="image-container"><img style="width: 257.84px" src="img/2dd0ff9fba4ca614.png"></p>
+<h2 is-upgraded>動作確認</h2>
+<p>それでは会員証サービスの動作確認です。</p>
+<p>ブラウザで「CloudfrontのURL/admin」を開くと管理画面が表示されます。管理画面の右上のQRコードアイコンをクリックしてQRコードリーダーを開きます。</p>
+<p>QRコードリーダーを開いたときに右上のカメラアイコンにスラッシュが入っているかと思うのでクリックしてカメラを起動します。</p>
+<p>ブラウザでカメラのアクセス許可のダイアログが表示されたときは許可します。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/fc3afe7bce9b8f0b.png"></p>
+<p>スキャンを行ったときに以下の画面が表示されて音がなったら、チェックインは正常に動作しています。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/7aa7fc04af662112.png"></p>
+<p>管理画面に戻ったときに以下の通り会員証を読み取ったユーザーが一覧で表示されたら動作確認は成功です</p>
+<p class="image-container"><img style="width: 601.70px" src="img/74e9c012d3a78fc5.png"></p>
+<p>以上でミニアプリ構築のパートは終了です。お疲れ様でした！</p>
+<p>この後は、このミニアプリをDatadogで監視をできるようにアレンジをして、さらにKPIを可視化するためのBI構築を行います。</p>
+<p class="image-container"><img style="width: 370.50px" src="img/6237106bfc389d16.png"></p>
+<p class="image-container"><img style="width: 340.50px" src="img/50dda62003573c75.png"></p>
+<p>次のページではハンズオン終了後の片付け手順を解説します。</p>
+<p>Datadog連携まですべて完了した後にご確認ください。</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="片付け" duration="0">
+        <p>ここではハンズオン終了後の片付けの手順を解説します。今回構築したアプリケーションは放置していると多少ではありますが毎月AWSの料金がかかるので使わなくなったら削除することをお勧めします。</p>
+<h2 is-upgraded>Serverless Flameworkで構築したリソースの削除</h2>
+<p>Serverless Flameworkで構築したアプリケーションは以下のコマンドで削除できます。</p>
+<pre><code>sls remove</code></pre>
+<p>上記のコマンドでLambdaやCloudfrontなどは削除されますが、フロントエンドのコードを格納していたS3バケットは削除されないのでS3のバケットはAWSのコンソール画面から削除します。  <code>&#123;&#123;YOUR_NAME}}-line-member-card-dev-deployment</code> の名前のバケットを削除します。</p>
+<h2 is-upgraded>Gitpodのインスタンスの削除</h2>
+<p>Gitpodはフリープランであればタイムアウトでインスタンスが止まるだけで請求は来ないのでハンズオンの復習をするために残してもいいですし、削除したい場合は <a href="https://gitpod.io/workspaces" target="_blank">https://gitpod.io/workspaces</a> から削除することができます。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/e5584624f3714d6.png"> </p>
+<h2 is-upgraded>IAMアクセスキーの削除</h2>
+<p>ハンズオンで使用したIAMのアクセスキーには AdministratorAccessのポリシーがアタッチされているのでハンズオン終了後は削除しておくと安全です。</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
