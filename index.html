@@ -373,10 +373,14 @@ export default {
 <p class="image-container"><img style="width: 257.84px" src="img/2dd0ff9fba4ca614.png"></p>
 <h2 is-upgraded>動作確認</h2>
 <p>それでは会員証サービスの動作確認です。</p>
-<p>ブラウザで「CloudfrontのURL/admin」を開くと管理画面が表示されます。管理画面の右上のQRコードアイコンをクリックしてQRコードリーダーを開きます。</p>
+<p>ブラウザで「CloudfrontのURL/admin」を開くと以下の管理画面が表示されます。</p>
+<p class="image-container"><img style="width: 601.70px" src="img/365149abbc8662e3.png"></p>
+<p>管理画面の右上のQRコードアイコンをクリックしてQRコードリーダーを開きます。</p>
+<p class="image-container"><img style="width: 104.00px" src="img/ffc78966575c0c38.png"></p>
 <p>QRコードリーダーを開いたときに右上のカメラアイコンにスラッシュが入っているかと思うのでクリックしてカメラを起動します。</p>
 <p>ブラウザでカメラのアクセス許可のダイアログが表示されたときは許可します。</p>
 <p class="image-container"><img style="width: 601.70px" src="img/fc3afe7bce9b8f0b.png"></p>
+<p>カメラから10～15cmぐらい離してQRコードをかざすと認識しやすいです。</p>
 <p>スキャンを行ったときに以下の画面が表示されて音がなったら、チェックインは正常に動作しています。</p>
 <p class="image-container"><img style="width: 601.70px" src="img/7aa7fc04af662112.png"></p>
 <p>管理画面に戻ったときに以下の通り会員証を読み取ったユーザーが一覧で表示されたら動作確認は成功です</p>
@@ -401,7 +405,8 @@ export default {
 <p>Gitpodはフリープランであればタイムアウトでインスタンスが止まるだけで請求は来ないのでハンズオンの復習をするために残してもいいですし、削除したい場合は <a href="https://gitpod.io/workspaces" target="_blank">https://gitpod.io/workspaces</a> から削除することができます。</p>
 <p class="image-container"><img style="width: 601.70px" src="img/e5584624f3714d6.png"> </p>
 <h2 is-upgraded>IAMアクセスキーの削除</h2>
-<p>ハンズオンで使用したIAMのアクセスキーには AdministratorAccessのポリシーがアタッチされているのでハンズオン終了後は削除しておくと安全です。</p>
+<p>ハンズオンで使用したIAMのアクセスキーには AdministratorAccessのポリシーがアタッチされているので、ハンズオン終了後はAWSのIAMのコンソール画面からアクセスキーを削除しておくと安全です。</p>
+<p>Gitpodのインスタンスが停止された場合はAWSのアクセスキーはリセットされるので、serverlessコマンドを実行する場合は <code>aws configure</code> で再度認証情報を設定する必要があります。</p>
 
 
       </google-codelab-step>
